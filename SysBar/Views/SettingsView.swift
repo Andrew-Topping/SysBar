@@ -78,6 +78,21 @@ struct SettingsView: View {
                     .scaleEffect(0.75)
                     .frame(width: 40)
             }
+
+            Divider().background(Color.gray.opacity(0.2))
+
+            // Quit
+            Button(action: { NSApplication.shared.terminate(nil) }) {
+                HStack {
+                    Image(systemName: "power")
+                        .font(.system(size: 11))
+                    Text("Quit SysBar")
+                        .font(.system(size: 11, design: .monospaced))
+                }
+                .foregroundColor(Color(hex: "#ff4444"))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.plain)
         }
         .padding(12)
     }

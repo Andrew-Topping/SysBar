@@ -29,6 +29,7 @@ class StatusBarController {
         if let button = statusItem.button {
             button.title = "⬆ SysBar"
             button.action = #selector(togglePopover)
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.target = self
         }
 
@@ -51,6 +52,18 @@ class StatusBarController {
     }
 
     @objc private func togglePopover() {
+        guard let event = NSApp.currentEvent else { return }
+
+        // Right-click → show a minimal context menu with Quit
+        if event.type == .rightMouseUp {
+            let menu = NSMenu()
+            menu.addItem(withTitle: "Quit SysBar", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+            statusItem.menu = menu
+            statusItem.button?.performClick(nil)
+            statusItem.menu = nil   // remove menu so left-click still opens popover
+            return
+        }
+
         if popover.isShown {
             popover.performClose(nil)
             monitor.isPopoverVisible = false
