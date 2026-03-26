@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import Combine
 
 /// Owns the NSStatusItem and manages popover show/hide.
 class StatusBarController {
