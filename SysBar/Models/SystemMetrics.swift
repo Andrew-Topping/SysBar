@@ -19,6 +19,9 @@ struct SystemMetrics {
     var networkDownload: Double = 0
     var networkUpload:   Double = 0
 
+    // Processes
+    var topProcesses: [ProcessEntry] = []
+
     // Secondary
     var uptime: TimeInterval = 0
     var loadAvg1m: Double = 0

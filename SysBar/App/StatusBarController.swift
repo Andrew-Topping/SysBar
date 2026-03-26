@@ -58,12 +58,24 @@ class StatusBarController {
     }
 
     private func updateStatusBarTitle(_ metrics: SystemMetrics, showText: Bool) {
+        guard let button = statusItem.button else { return }
         if showText {
-            let cpu = String(format: "CPU %.0f%%", metrics.cpuUsage * 100)
-            let ram = String(format: "RAM %.0f%%", metrics.ramFraction * 100)
-            statusItem.button?.title = "\(cpu)  \(ram)"
+            let cpuStr = String(format: "%.0f%%", metrics.cpuUsage * 100)
+            let ramStr = String(format: "%.0f%%", metrics.ramFraction * 100)
+            let view   = StatusBarIconView(cpuStr: cpuStr, ramStr: ramStr)
+            let renderer = ImageRenderer(content: view)
+            renderer.scale = NSScreen.main?.backingScaleFactor ?? 2.0
+            if let img = renderer.nsImage {
+                img.isTemplate    = true  // macOS recolours for light/dark menu bar automatically
+                button.image      = img
+                button.imagePosition  = .imageOnly
+                button.imageScaling   = .scaleNone
+                button.title      = ""
+            }
         } else {
-            statusItem.button?.title = "⬆"
+            button.title         = ""
+            button.imagePosition = .imageOnly
+            button.image         = NSImage(systemSymbolName: "cpu", accessibilityDescription: "SysBar")
         }
     }
 }

@@ -4,6 +4,7 @@ struct PopoverView: View {
     @EnvironmentObject var monitor: SystemMonitorService
     @EnvironmentObject var settings: AppSettings
     @State private var showingSettings = false
+    @State private var showingProcesses = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -81,9 +82,54 @@ struct PopoverView: View {
                               monitor.metrics.loadAvg5m,
                               monitor.metrics.loadAvg15m)
             )
+
+            Divider().background(Color.gray.opacity(0.3)).padding(.vertical, 4)
+            processToggle
         }
         .padding(12)
         .background(settings.theme.background)
+    }
+
+    // MARK: - Process toggle
+
+    private var processToggle: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Button(action: { withAnimation(.easeInOut(duration: 0.2)) { showingProcesses.toggle() } }) {
+                HStack {
+                    Text("PROCESSES")
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundColor(settings.theme.labelColor)
+                    Spacer()
+                    Image(systemName: showingProcesses ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundColor(settings.theme.labelColor)
+                }
+            }
+            .buttonStyle(.plain)
+
+            if showingProcesses {
+                VStack(spacing: 3) {
+                    ForEach(monitor.metrics.topProcesses) { proc in
+                        HStack(spacing: 6) {
+                            Text(proc.name)
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundColor(settings.theme.valueColor)
+                                .lineLimit(1)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Text(String(format: "%.0f%%", proc.cpuPercent))
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundColor(settings.theme.barColor(for: proc.cpuPercent / 100))
+                                .frame(width: 36, alignment: .trailing)
+                            Text(Formatters.bytes(proc.ramBytes))
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundColor(settings.theme.labelColor)
+                                .frame(width: 60, alignment: .trailing)
+                        }
+                    }
+                }
+                .padding(.top, 2)
+            }
+        }
     }
 
     private func secondaryRow(label: String, value: String) -> some View {
