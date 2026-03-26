@@ -5,12 +5,23 @@ import Combine
 class SystemMonitorService: ObservableObject {
     @Published var metrics = SystemMetrics()
 
+    /// Set by StatusBarController so we skip expensive work when popover is hidden.
+    var isPopoverVisible = false
+
     private let cpu      = CPUMonitor()
     private let memory   = MemoryMonitor()
     private let disk     = DiskMonitor()
     private let network  = NetworkMonitor()
     private let processes = ProcessMonitor()
+
+    /// All metric reads run on this queue — keeps the main thread free.
+    private let queue = DispatchQueue(label: "com.sysbar.monitor", qos: .utility)
     private var timer: AnyCancellable?
+
+    /// Process list is expensive — only refresh every N ticks.
+    private var tickCount = 0
+    private let processTickInterval = 3   // refresh processes every 3rd tick
+    private var cachedProcesses: [ProcessEntry] = []
 
     init() {
         startMonitoring()
@@ -20,15 +31,16 @@ class SystemMonitorService: ObservableObject {
         timer = Timer.publish(every: interval, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
-                self?.refresh()
+                self?.queue.async { self?.refresh() }
             }
-        // Fire once immediately so the UI isn't blank on launch
-        refresh()
+        queue.async { self.refresh() }
     }
 
     func stopMonitoring() {
         timer = nil
     }
+
+    // MARK: - Refresh (runs on background queue)
 
     private func refresh() {
         var snapshot = SystemMetrics()
@@ -36,10 +48,21 @@ class SystemMonitorService: ObservableObject {
         memory.fill(into: &snapshot)
         disk.fill(into: &snapshot)
         network.fill(into: &snapshot)
-        snapshot.topProcesses = processes.topByCPU()
         snapshot.uptime       = Self.systemUptime()
         snapshot.thermalState = ProcessInfo.processInfo.thermalState
-        metrics = snapshot
+
+        // Only update process list when popover is open, and only every N ticks
+        if isPopoverVisible {
+            tickCount += 1
+            if tickCount % processTickInterval == 0 || cachedProcesses.isEmpty {
+                cachedProcesses = processes.topByCPU()
+            }
+        }
+        snapshot.topProcesses = cachedProcesses
+
+        DispatchQueue.main.async { [weak self] in
+            self?.metrics = snapshot
+        }
     }
 
     // MARK: - Uptime

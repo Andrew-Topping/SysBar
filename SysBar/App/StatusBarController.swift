@@ -9,6 +9,8 @@ class StatusBarController {
     private let monitor: SystemMonitorService
     private let settings: AppSettings
     private var cancellables = Set<AnyCancellable>()
+    private var lastCpuStr = ""
+    private var lastRamStr = ""
 
     init() {
         monitor = SystemMonitorService()
@@ -51,7 +53,9 @@ class StatusBarController {
     @objc private func togglePopover() {
         if popover.isShown {
             popover.performClose(nil)
+            monitor.isPopoverVisible = false
         } else if let button = statusItem.button {
+            monitor.isPopoverVisible = true
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             popover.contentViewController?.view.window?.makeKey()
         }
@@ -62,6 +66,12 @@ class StatusBarController {
         if showText {
             let cpuStr = String(format: "%.0f%%", metrics.cpuUsage * 100)
             let ramStr = String(format: "%.0f%%", metrics.ramFraction * 100)
+
+            // Skip re-render if values haven't changed — ImageRenderer is not free
+            guard cpuStr != lastCpuStr || ramStr != lastRamStr else { return }
+            lastCpuStr = cpuStr
+            lastRamStr = ramStr
+
             let view   = StatusBarIconView(cpuStr: cpuStr, ramStr: ramStr)
             let renderer = ImageRenderer(content: view)
             renderer.scale = NSScreen.main?.backingScaleFactor ?? 2.0
