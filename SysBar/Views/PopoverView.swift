@@ -68,6 +68,11 @@ struct PopoverView: View {
 
             Divider().background(Color.gray.opacity(0.3)).padding(.vertical, 4)
 
+            secondaryRow(label: "↓", value: Formatters.bytesPerSecond(monitor.metrics.networkDownload))
+            secondaryRow(label: "↑", value: Formatters.bytesPerSecond(monitor.metrics.networkUpload))
+
+            Divider().background(Color.gray.opacity(0.3)).padding(.vertical, 4)
+
             secondaryRow(label: "Uptime", value: Formatters.uptime(monitor.metrics.uptime))
             secondaryRow(
                 label: "Load",

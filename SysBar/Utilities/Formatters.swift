@@ -24,6 +24,15 @@ enum Formatters {
         return String(format: "%.0f / %.0f MB", usedMB, totalMB)
     }
 
+    static func bytesPerSecond(_ bps: Double) -> String {
+        switch bps {
+        case ..<1_024:              return "0 KB/s"
+        case ..<1_048_576:         return String(format: "%.0f KB/s", bps / 1_024)
+        case ..<1_073_741_824:     return String(format: "%.1f MB/s", bps / 1_048_576)
+        default:                   return String(format: "%.2f GB/s", bps / 1_073_741_824)
+        }
+    }
+
     static func uptime(_ interval: TimeInterval) -> String {
         let total = Int(interval)
         let days  = total / 86400

@@ -15,6 +15,10 @@ struct SystemMetrics {
     var diskUsed: UInt64 = 0            // bytes
     var diskTotal: UInt64 = 0           // bytes
 
+    // Network (bytes/sec)
+    var networkDownload: Double = 0
+    var networkUpload:   Double = 0
+
     // Secondary
     var uptime: TimeInterval = 0
     var loadAvg1m: Double = 0

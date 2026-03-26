@@ -5,9 +5,10 @@ import Combine
 class SystemMonitorService: ObservableObject {
     @Published var metrics = SystemMetrics()
 
-    private let cpu = CPUMonitor()
-    private let memory = MemoryMonitor()
-    private let disk = DiskMonitor()
+    private let cpu     = CPUMonitor()
+    private let memory  = MemoryMonitor()
+    private let disk    = DiskMonitor()
+    private let network = NetworkMonitor()
     private var timer: AnyCancellable?
 
     init() {
@@ -33,6 +34,7 @@ class SystemMonitorService: ObservableObject {
         snapshot.cpuUsage = cpu.usage()
         memory.fill(into: &snapshot)
         disk.fill(into: &snapshot)
+        network.fill(into: &snapshot)
         snapshot.uptime = Self.systemUptime()
         let avg = Self.loadAverages()
         snapshot.loadAvg1m = avg.0
