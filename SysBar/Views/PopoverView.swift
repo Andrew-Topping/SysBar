@@ -16,14 +16,16 @@ struct PopoverView: View {
     // MARK: - Header
 
     private var headerBar: some View {
-        HStack {
+        ZStack {
             Text("SysBar")
                 .font(.system(.headline, design: .monospaced))
                 .foregroundColor(.white)
-            Spacer()
-            Text("↻ 2s")
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundColor(.gray)
+            HStack {
+                Spacer()
+                Text("↻ 2s")
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundColor(.gray)
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)

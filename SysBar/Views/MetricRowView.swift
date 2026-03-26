@@ -37,7 +37,8 @@ struct MetricRowView: View {
             Text(valueText)
                 .font(.system(size: 11, design: .monospaced))
                 .foregroundColor(Color(hex: "#e0e0e0"))
-                .frame(width: 72, alignment: .trailing)
+                .lineLimit(1)
+                .frame(width: 100, alignment: .leading)
         }
     }
 }
