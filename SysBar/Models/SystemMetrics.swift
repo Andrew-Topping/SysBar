@@ -24,11 +24,30 @@ struct SystemMetrics {
 
     // Secondary
     var uptime: TimeInterval = 0
-    var loadAvg1m: Double = 0
-    var loadAvg5m: Double = 0
-    var loadAvg15m: Double = 0
+    var thermalState: ProcessInfo.ThermalState = .nominal
 
-    // Computed fractions for progress bars
+    var thermalLabel: String {
+        switch thermalState {
+        case .nominal:  return "None"
+        case .fair:     return "Mild"
+        case .serious:  return "Heavy"
+        case .critical: return "Critical"
+        @unknown default: return "Unknown"
+        }
+    }
+
+    // Fraction used for colour-coding the thermal row (0=green, 1=red)
+    var thermalFraction: Double {
+        switch thermalState {
+        case .nominal:  return 0.0
+        case .fair:     return 0.5
+        case .serious:  return 0.8
+        case .critical: return 1.0
+        @unknown default: return 0.0
+        }
+    }
+
+    // MARK: - Computed fractions for progress bars
     var ramFraction: Double {
         ramTotal > 0 ? Double(ramUsed) / Double(ramTotal) : 0
     }

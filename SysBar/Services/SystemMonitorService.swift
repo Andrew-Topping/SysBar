@@ -37,11 +37,8 @@ class SystemMonitorService: ObservableObject {
         disk.fill(into: &snapshot)
         network.fill(into: &snapshot)
         snapshot.topProcesses = processes.topByCPU()
-        snapshot.uptime = Self.systemUptime()
-        let avg = Self.loadAverages()
-        snapshot.loadAvg1m = avg.0
-        snapshot.loadAvg5m = avg.1
-        snapshot.loadAvg15m = avg.2
+        snapshot.uptime       = Self.systemUptime()
+        snapshot.thermalState = ProcessInfo.processInfo.thermalState
         metrics = snapshot
     }
 
@@ -53,13 +50,5 @@ class SystemMonitorService: ObservableObject {
         sysctlbyname("kern.boottime", &boottime, &size, nil, 0)
         let boot = Date(timeIntervalSince1970: TimeInterval(boottime.tv_sec))
         return Date().timeIntervalSince(boot)
-    }
-
-    // MARK: - Load averages
-
-    private static func loadAverages() -> (Double, Double, Double) {
-        var avg = [Double](repeating: 0, count: 3)
-        getloadavg(&avg, 3)
-        return (avg[0], avg[1], avg[2])
     }
 }

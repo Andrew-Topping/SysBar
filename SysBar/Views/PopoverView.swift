@@ -75,13 +75,7 @@ struct PopoverView: View {
             Divider().background(Color.gray.opacity(0.3)).padding(.vertical, 4)
 
             secondaryRow(label: "Uptime", value: Formatters.uptime(monitor.metrics.uptime))
-            secondaryRow(
-                label: "Load",
-                value: String(format: "%.2f  %.2f  %.2f",
-                              monitor.metrics.loadAvg1m,
-                              monitor.metrics.loadAvg5m,
-                              monitor.metrics.loadAvg15m)
-            )
+            thermalRow
 
             Divider().background(Color.gray.opacity(0.3)).padding(.vertical, 4)
             processToggle
@@ -94,18 +88,20 @@ struct PopoverView: View {
 
     private var processToggle: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Button(action: { withAnimation(.easeInOut(duration: 0.2)) { showingProcesses.toggle() } }) {
-                HStack {
-                    Text("PROCESSES")
-                        .font(.system(size: 9, design: .monospaced))
-                        .foregroundColor(settings.theme.labelColor)
-                    Spacer()
-                    Image(systemName: showingProcesses ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundColor(settings.theme.labelColor)
-                }
+            HStack {
+                Text("PROCESSES")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(settings.theme.labelColor)
+                Spacer()
+                Image(systemName: showingProcesses ? "chevron.up" : "chevron.down")
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundColor(settings.theme.labelColor)
             }
-            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, minHeight: 20)   // large tap target across full width
+            .contentShape(Rectangle())                    // make entire row hittable
+            .onTapGesture {
+                withAnimation(.easeInOut(duration: 0.2)) { showingProcesses.toggle() }
+            }
 
             if showingProcesses {
                 VStack(spacing: 3) {
@@ -129,6 +125,18 @@ struct PopoverView: View {
                 }
                 .padding(.top, 2)
             }
+        }
+    }
+
+    private var thermalRow: some View {
+        HStack {
+            Text("Thermal")
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundColor(settings.theme.labelColor)
+                .frame(width: 48, alignment: .leading)
+            Text(monitor.metrics.thermalLabel)
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundColor(settings.theme.barColor(for: monitor.metrics.thermalFraction))
         }
     }
 
