@@ -2,15 +2,21 @@ import SwiftUI
 
 struct PopoverView: View {
     @EnvironmentObject var monitor: SystemMonitorService
+    @EnvironmentObject var settings: AppSettings
+    @State private var showingSettings = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            headerBar
-            Divider().background(Color.gray.opacity(0.4))
-            metricsPanel
+            if showingSettings {
+                SettingsView(onBack: { showingSettings = false })
+            } else {
+                headerBar
+                Divider().background(Color.gray.opacity(0.4))
+                metricsPanel
+            }
         }
         .frame(width: 280)
-        .background(Color(hex: "#1a1a1a"))
+        .background(settings.theme.background)
     }
 
     // MARK: - Header
@@ -19,24 +25,26 @@ struct PopoverView: View {
         ZStack {
             Text("SysBar")
                 .font(.system(.headline, design: .monospaced))
-                .foregroundColor(.white)
+                .foregroundColor(settings.theme.titleColor)
             HStack {
                 Spacer()
-                Text("↻ 2s")
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundColor(.gray)
+                Button(action: { showingSettings = true }) {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 11))
+                        .foregroundColor(settings.theme.labelColor)
+                }
+                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Color(hex: "#222222"))
+        .background(settings.theme.headerBackground)
     }
 
     // MARK: - Metrics panel
 
     private var metricsPanel: some View {
         VStack(alignment: .leading, spacing: 6) {
-            // Primary metrics
             MetricRowView(
                 label: "CPU",
                 fraction: monitor.metrics.cpuUsage,
@@ -60,7 +68,6 @@ struct PopoverView: View {
 
             Divider().background(Color.gray.opacity(0.3)).padding(.vertical, 4)
 
-            // Secondary metrics
             secondaryRow(label: "Uptime", value: Formatters.uptime(monitor.metrics.uptime))
             secondaryRow(
                 label: "Load",
@@ -71,18 +78,18 @@ struct PopoverView: View {
             )
         }
         .padding(12)
-        .background(Color(hex: "#1a1a1a"))
+        .background(settings.theme.background)
     }
 
     private func secondaryRow(label: String, value: String) -> some View {
         HStack {
             Text(label)
                 .font(.system(size: 11, design: .monospaced))
-                .foregroundColor(.gray)
+                .foregroundColor(settings.theme.labelColor)
                 .frame(width: 48, alignment: .leading)
             Text(value)
                 .font(.system(size: 11, design: .monospaced))
-                .foregroundColor(Color(hex: "#cccccc"))
+                .foregroundColor(settings.theme.valueColor)
         }
     }
 }

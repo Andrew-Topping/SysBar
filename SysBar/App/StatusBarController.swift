@@ -7,16 +7,21 @@ class StatusBarController {
     private var statusItem: NSStatusItem
     private var popover: NSPopover
     private let monitor: SystemMonitorService
+    private let settings: AppSettings
+    private var cancellables = Set<AnyCancellable>()
 
     init() {
         monitor = SystemMonitorService()
+        settings = AppSettings()
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         popover = NSPopover()
         popover.contentSize = NSSize(width: 280, height: 320)
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(
-            rootView: PopoverView().environmentObject(monitor)
+            rootView: PopoverView()
+                .environmentObject(monitor)
+                .environmentObject(settings)
         )
 
         if let button = statusItem.button {
@@ -25,16 +30,23 @@ class StatusBarController {
             button.target = self
         }
 
-        // Keep status bar text in sync with metrics
+        // Restart monitor when refresh interval changes
+        settings.$refreshInterval
+            .removeDuplicates()
+            .sink { [weak self] interval in
+                self?.monitor.startMonitoring(interval: interval)
+            }
+            .store(in: &cancellables)
+
+        // Keep status bar text in sync with metrics and settings
         monitor.$metrics
+            .combineLatest(settings.$showTextInMenuBar)
             .receive(on: RunLoop.main)
-            .sink { [weak self] metrics in
-                self?.updateStatusBarTitle(metrics)
+            .sink { [weak self] metrics, showText in
+                self?.updateStatusBarTitle(metrics, showText: showText)
             }
             .store(in: &cancellables)
     }
-
-    private var cancellables = Set<AnyCancellable>()
 
     @objc private func togglePopover() {
         if popover.isShown {
@@ -45,9 +57,13 @@ class StatusBarController {
         }
     }
 
-    private func updateStatusBarTitle(_ metrics: SystemMetrics) {
-        let cpu = String(format: "CPU %.0f%%", metrics.cpuUsage * 100)
-        let ram = String(format: "RAM %.0f%%", metrics.ramFraction * 100)
-        statusItem.button?.title = "\(cpu)  \(ram)"
+    private func updateStatusBarTitle(_ metrics: SystemMetrics, showText: Bool) {
+        if showText {
+            let cpu = String(format: "CPU %.0f%%", metrics.cpuUsage * 100)
+            let ram = String(format: "RAM %.0f%%", metrics.ramFraction * 100)
+            statusItem.button?.title = "\(cpu)  \(ram)"
+        } else {
+            statusItem.button?.title = "⬆"
+        }
     }
 }
